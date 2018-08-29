@@ -1,0 +1,5 @@
+all IRQ handlers must return in under 10us
+interrupts must not be disabled for more than 1us at a time
+
+
+do not remap vector table
