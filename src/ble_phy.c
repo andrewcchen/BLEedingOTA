@@ -11,9 +11,6 @@
 
 #define T_RAMPUP 40
 
-//uint8_t *ble_phy_tx_ptr;
-//uint8_t *ble_phy_rx_ptr;
-
 void (*ble_phy_tx_callback)(uint32_t);
 void (*ble_phy_rx_callback)(uint32_t);
 void (*ble_phy_rx_fail_callback)(void);
@@ -90,6 +87,11 @@ void ble_phy_set_maxlen(uint8_t maxlen) {
 
 void ble_phy_set_ptr(void *ptr) {
 	NRF_RADIO->PACKETPTR = (uint32_t)ptr;
+}
+
+uint32_t ble_phy_get_time(void) {
+	NRF_TIMER0->TASKS_CAPTURE[3] = 1;
+	return NRF_TIMER0->CC[3];
 }
 
 /*

@@ -75,12 +75,12 @@ static void rx_handler(uint32_t end_time) {
 }
 
 static void rx_fail_handler(void) {
-	NRF_TIMER0->TASKS_CAPTURE[3] = 1;
-	next_channel(NRF_TIMER0->CC[3]);
+	uint32_t t = ble_phy_get_time();
+	next_channel(t);
 }
 
 void ble_adv_start(void) {
-	ble_phy_set_ptr(adv_ind_pdu);
+	//ble_phy_set_ptr(adv_ind_pdu);
 
 	ble_phy_tx_callback = &tx_handler;
 	ble_phy_rx_callback = &rx_handler;

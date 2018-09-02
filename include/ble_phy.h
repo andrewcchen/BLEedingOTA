@@ -17,12 +17,7 @@ void ble_phy_set_crcinit(uint32_t crcinit);
 void ble_phy_set_maxlen(uint8_t maxlen);
 void ble_phy_set_ptr(void *ptr);
 
-/**
- * Schedule a tx at time
- */
-void ble_phy_tx(uint32_t start_time);
+uint32_t ble_phy_get_time(void);
 
-/**
- * Schedule a rx at time
- */
+void ble_phy_tx(uint32_t start_time);
 void ble_phy_rx(uint32_t start_time, uint32_t length);
