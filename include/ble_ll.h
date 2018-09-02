@@ -15,6 +15,31 @@ enum ble_pdu_type {
 	ADV_SCAN_IND = 6,
 };
 
+enum ble_ctrl_opcode {
+	LL_CONNECTION_UPDATE_REQ = 0x00,
+	LL_CHANNEL_MAP_REQ = 0x01,
+	LL_TERMINATE_IND = 0x02,
+	LL_ENC_REQ = 0x03,
+	LL_ENC_RSP = 0x04,
+	LL_START_ENC_REQ = 0x05,
+	LL_START_ENC_RSP = 0x06,
+	LL_UNKNOWN_RSP = 0x07,
+	LL_FEATURE_REQ = 0x08,
+	LL_FEATURE_RSP = 0x09,
+	LL_PAUSE_ENC_REQ = 0x0A,
+	LL_PAUSE_ENC_RSP = 0x0B,
+	LL_VERSION_IND = 0x0C,
+	LL_REJECT_IND = 0x0D,
+	LL_SLAVE_FEATURE_REQ = 0x0E,
+	LL_CONNECTION_PARAM_REQ = 0x0F,
+	LL_CONNECTION_PARAM_RSP = 0x10,
+	LL_REJECT_IND_EXT = 0x11,
+	LL_PING_REQ = 0x12,
+	LL_PING_RSP = 0x13,
+	LL_LENGTH_REQ = 0x14,
+	LL_LENGTH_RSP = 0x15,
+};
+
 struct ble_advertising_pdu {
 	uint8_t pdu_type:4;
 	uint8_t _reserved:1;
