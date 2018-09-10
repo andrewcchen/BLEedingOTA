@@ -40,22 +40,14 @@ enum ble_ctrl_opcode {
 	LL_LENGTH_RSP = 0x15,
 };
 
+#pragma pack(push, 1)
+
 struct ble_advertising_pdu {
 	uint8_t pdu_type:4;
 	uint8_t _reserved:1;
 	uint8_t chsel:1;
 	uint8_t txadd:1;
 	uint8_t rxadd:1;
-	uint8_t length;
-	uint8_t payload[];
-};
-
-struct ble_data_pdu {
-	uint8_t llid:2;
-	uint8_t nesn:1;
-	uint8_t sn:1;
-	uint8_t md:1;
-	uint8_t _reserved:3;
 	uint8_t length;
 	uint8_t payload[];
 };
@@ -92,11 +84,62 @@ struct ble_connect_req {
 } __attribute__((packed));
 
 
+struct ble_data_pdu {
+	uint8_t llid:2;
+	uint8_t nesn:1;
+	uint8_t sn:1;
+	uint8_t md:1;
+	uint8_t _reserved:3;
+	uint8_t length;
+	uint8_t payload[];
+};
+
+struct ble_ctrl_pdu {
+	uint8_t llid:2;
+	uint8_t nesn:1;
+	uint8_t sn:1;
+	uint8_t md:1;
+	uint8_t _reserved:3;
+	uint8_t length;
+	uint8_t opcode;
+	uint8_t payload[];
+};
+
+struct ble_ll_feature_rsp {
+	struct ble_ctrl_pdu header;
+	uint8_t feature_set[8];
+};
+
+struct ble_ll_version_ind {
+	struct ble_ctrl_pdu header;
+	uint8_t vers_nr;
+	uint16_t comp_id;
+	uint16_t sub_vers_nr;
+};
+
+struct ble_ll_length_rsp {
+	struct ble_ctrl_pdu header;
+	uint16_t max_rx_octets;
+	uint16_t max_rx_time;
+	uint16_t max_tx_octets;
+	uint16_t max_tx_time;
+};
+
+#pragma pack(pop)
+
+
 static inline bool ble_addr_eq(ble_addr a, ble_addr b) {
 	for (int i = 0; i < 6; i++) {
 		if (a[i] != b[i]) return false;
 	}
 	return true;
 }
+
+
+extern uint8_t ble_ll_tx_buf[29];
+extern bool ble_ll_tx_full;
+
+extern uint8_t ble_ll_rx_buf[253];
+extern bool ble_ll_rx_full;
 
 void ble_ll_enter_connection(struct ble_connect_req *req, uint32_t end_time);

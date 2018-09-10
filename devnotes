@@ -1,3 +1,17 @@
+phy:
+complete
+
+link layer:
+need handling of other control packets
+
+l2cap:
+need to be implemented
+
+gatt:
+need to be implemented
+
+
+
 all IRQ handlers must return in under 10us
 interrupts must not be disabled for more than 1us at a time
 
