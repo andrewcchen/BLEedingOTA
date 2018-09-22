@@ -3,7 +3,7 @@
 #include <string.h>
 #include <assert.h>
 
-//#include "nrf52/nrf52832.h"
+#include "nrf52/nrf52832.h"
 
 #include "ble_ll.h"
 #include "ble_phy.h"
@@ -24,7 +24,7 @@ static uint8_t transmit_seq_num;
 static uint8_t next_expected_seq_num;
 
 uint8_t ble_ll_tx_buf[29] __attribute__ ((aligned (4)));
-bool ble_ll_tx_full;
+uint8_t ble_ll_tx_full;
 
 uint8_t ble_ll_rx_buf[253] __attribute__ ((aligned (4)));
 bool ble_ll_rx_full;
@@ -64,7 +64,7 @@ static void set_rx_ptr(void) {
 
 static void set_tx_ptr(void) {
 	ble_phy_set_maxlen(253);
-	if (ble_ll_tx_full) {
+	if (ble_ll_tx_full == 2) {
 		tx_ptr = &tx_empty_buf;
 	} else {
 		tx_ptr = (void*)ble_ll_tx_buf;
@@ -83,7 +83,7 @@ static void tx_handler(uint32_t end_time) {
 		ble_phy_rx(end_time + 146, 8);
 	}
 }
-// TODO check length > 251
+
 static void rx_handler(uint32_t end_time) {
 	connected = 1;
 	//struct ble_data_pdu *rx_pkt = (void*)ble_phy_rx_ptr;
@@ -192,14 +192,33 @@ void ble_ll_enter_connection(struct ble_connect_req *req, uint32_t end_time) {
 	ble_phy_rx(expected_anchor_point - w, transmit_window_size + w);
 }
 
+void* ble_ll_prepare_tx(void) {
+	__disable_irq();
+	if (ble_ll_tx_full == 0) {
+		ble_ll_tx_full = 1;
+		__enable_irq();
+		return ble_ll_tx_buf;
+	} else {
+		__enable_irq();
+		return NULL;
+	}
+}
+
+void ble_ll_ready_tx(int length) {
+	assert(ble_ll_tx_full == 1);
+	struct ble_data_pdu *pdu = (void*)ble_ll_tx_buf;
+	pdu->llid = 2;
+	pdu->length = length;
+	ble_ll_tx_full = 2;
+}
+
 
 static void process_ctrl_pkt(uint8_t opcode, void *data) {
 	(void)data;
 
-	if (ble_ll_tx_full) return;
-	ble_ll_tx_full = 1;
+	struct ble_ctrl_pdu *tx = ble_ll_prepare_tx();
+	if (tx == NULL) return;
 
-	struct ble_ctrl_pdu *tx = (void*)ble_ll_tx_buf;
 	tx->llid = 3;
 
 	switch (opcode) {
@@ -241,6 +260,7 @@ static void process_ctrl_pkt(uint8_t opcode, void *data) {
 	}
 
 	ble_ll_rx_full = 0;
+	ble_ll_tx_full = 2;
 }
 
 static void process_packet(void) {
@@ -250,7 +270,8 @@ static void process_packet(void) {
 		uint8_t opcode = pdu->payload[0];
 		void *data = pdu->payload+1;
 		process_ctrl_pkt(opcode, data);
-	} else {
+	} else if (pdu->llid == 0) {
+		assert(false);
 		ble_ll_rx_full = 0;
 	}
 }

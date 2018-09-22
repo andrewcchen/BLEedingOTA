@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -136,10 +138,13 @@ static inline bool ble_addr_eq(ble_addr a, ble_addr b) {
 }
 
 
-extern uint8_t ble_ll_tx_buf[29];
-extern bool ble_ll_tx_full;
+extern uint8_t ble_ll_tx_buf[];
+extern uint8_t ble_ll_tx_full;
 
-extern uint8_t ble_ll_rx_buf[253];
+extern uint8_t ble_ll_rx_buf[];
 extern bool ble_ll_rx_full;
 
 void ble_ll_enter_connection(struct ble_connect_req *req, uint32_t end_time);
+
+void* ble_ll_prepare_tx(void);
+void ble_ll_ready_tx(int length);

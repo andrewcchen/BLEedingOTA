@@ -29,7 +29,7 @@ OBJCOPY := $(PREFIX)-objcopy
 OBJDUMP := $(PREFIX)-objdump
 
 CFLAGS ?= -g3 -O0
-CFLAGS := -Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes -fno-common $(ARCH_FLAGS) $(CFLAGS)
+CFLAGS := -std=c99 -Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes -fno-common $(ARCH_FLAGS) $(CFLAGS)
 #CFLAGS += -Wno-missing-prototypes
 CPPFLAGS := -MD $(INCLUDE_DIRS) $(DEFS) $(CPPFLAGS)
 LDFLAGS := --static $(LD_LIBS) $(ARCH_FLAGS) $(LDFLAGS)
