@@ -10,6 +10,8 @@ void ble_l2cap_poll(void);
 void* ble_l2cap_prepare_tx(void);
 void ble_l2cap_ready_tx(int length);
 
+extern bool ble_l2cap_rx_full;
+
 struct ble_l2cap_pdu {
 	uint16_t length;
 	uint16_t cid;

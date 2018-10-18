@@ -35,6 +35,7 @@
 #include "ble_phy.h"
 #include "ble_adv.h"
 #include "ble_ll.h"
+#include "ble_l2cap.h"
 
 #include "config.h"
 
@@ -59,17 +60,25 @@ int main(void) {
 	while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0);
 	NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
 
-	/*
-	NRF_CLOCK->LFCLKSRC = 1;
-	NRF_CLOCK->TASKS_LFCLKSTART = 1;
-	while (NRF_CLOCK->EVENTS_LFCLKSTARTED == 0);
-	NRF_CLOCK->EVENTS_LFCLKSTARTED = 0;
-	*/
+	//NRF_CLOCK->LFCLKSRC = 1;
+	//NRF_CLOCK->TASKS_LFCLKSTART = 1;
+	//while (NRF_CLOCK->EVENTS_LFCLKSTARTED == 0);
+	//NRF_CLOCK->EVENTS_LFCLKSTARTED = 0;
 
 	seed_rng();
+
+	//NRF_GPIO->PIN_CNF[22] = 1 | 3 << 8;
+	//NRF_GPIOTE->CONFIG[0] = 3 | 22 << 8;
+	//NRF_PPI->CH[0].EEP = &NRF_RADIO->EVENTS_READY;
+	//NRF_PPI->CH[0].TEP = &NRF_GPIOTE->TASKS_SET[0];
+	//NRF_PPI->CH[1].EEP = &NRF_RADIO->EVENTS_END;
+	//NRF_PPI->CH[1].TEP = &NRF_GPIOTE->TASKS_CLR[0];
+	//NRF_PPI->CHENSET = 1 << 0 | 1 << 1;
 
 	ble_phy_init();
 	ble_adv_start();
 
-	while (1);
+	while (1) {
+		ble_l2cap_poll();
+	}
 }

@@ -10,18 +10,17 @@
 #include "config.h"
 
 static uint8_t rx_buf[BLE_L2CAP_RX_MTU] __attribute__ ((aligned (4)));
-static bool rx_full;
+bool ble_l2cap_rx_full;
 
 static inline void poll_ll(void) {
-	if (!ble_ll_rx_full) return;
-
 	static int rx_filled;
 
 	struct ble_data_pdu *ll_pdu = (void*)ble_ll_rx_buf;
 	struct ble_l2cap_pdu *pdu = (void*)rx_buf;
-	
-	if (ll_pdu->llid != 1 && ll_pdu->llid != 2)
-		return;
+
+	if (!ble_ll_rx_full) return;
+	if (ll_pdu->llid != 1 && ll_pdu->llid != 2) return;
+
 	// TODO check llid validity?
 
 	int new_filled = rx_filled + ll_pdu->length;
@@ -30,14 +29,14 @@ static inline void poll_ll(void) {
 		abort();
 	}
 
-	memcpy(rx_buf + rx_filled, ll_pdu->payload, rx_filled);
+	memcpy(rx_buf + rx_filled, ll_pdu->payload, ll_pdu->length);
 	rx_filled = new_filled;
 
 	ble_ll_rx_full = false;
 
 	if (pdu->length <= new_filled) {
 		rx_filled = 0;
-		rx_full = 1;
+		ble_l2cap_rx_full = true;
 	}
 }
 
@@ -56,13 +55,14 @@ static inline void process_packet(void) {
 void ble_l2cap_poll(void) {
 	poll_ll();
 
-	if (rx_full) process_packet();
+	if (ble_l2cap_rx_full)
+		process_packet();
 }
 
 void* ble_l2cap_prepare_tx(void) {
 	void *ptr = ble_ll_prepare_tx();
 	if (ptr == NULL) return NULL;
-	else return (ptr + 4);
+	else return (ptr + 6);
 }
 
 void ble_l2cap_ready_tx(int length) {

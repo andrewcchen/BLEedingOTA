@@ -55,7 +55,7 @@ static void set_rx_ptr(void) {
 		ble_phy_set_maxlen(0);
 		rx_ptr = &rx_overflow_buf;
 	} else {
-		ble_ll_rx_full = true;
+		//ble_ll_rx_full = true;
 		ble_phy_set_maxlen(253);
 		rx_ptr = (void*)ble_ll_rx_buf;
 	}
@@ -65,9 +65,9 @@ static void set_rx_ptr(void) {
 static void set_tx_ptr(void) {
 	ble_phy_set_maxlen(253);
 	if (ble_ll_tx_full == 2) {
-		tx_ptr = &tx_empty_buf;
-	} else {
 		tx_ptr = (void*)ble_ll_tx_buf;
+	} else {
+		tx_ptr = &tx_empty_buf;
 	}
 	tx_ptr->nesn = next_expected_seq_num;
 	tx_ptr->sn = transmit_seq_num;
@@ -80,7 +80,7 @@ static void tx_handler(uint32_t end_time) {
 		end_event();
 	} else {
 		set_rx_ptr();
-		ble_phy_rx(end_time + 146, 8);
+		ble_phy_rx(end_time + 140, 20);
 	}
 }
 
@@ -95,7 +95,7 @@ static void rx_handler(uint32_t end_time) {
 		//expected_anchor_point = anchor_point;
 	}
 
-	bool should_process_pkt = false;
+	//bool should_process_pkt = false;
 
 	if (ble_phy_crcok) {
 		last_crcfail = false;
@@ -105,10 +105,10 @@ static void rx_handler(uint32_t end_time) {
 
 			if (rx_ptr != &rx_overflow_buf) {
 				next_expected_seq_num ^= 1;
-				if (rx_ptr->length == 0 || rx_ptr->llid == 0)
-					ble_ll_rx_full = false;
-				else
-					should_process_pkt = true;
+				//assert(rx_ptr->llid != 0);
+				if (rx_ptr->length != 0) {
+					ble_ll_rx_full = true;
+				}
 			}
 			if (rx_ptr->nesn != transmit_seq_num) { // ack
 				transmit_seq_num ^= 1;
@@ -128,7 +128,7 @@ static void rx_handler(uint32_t end_time) {
 	set_tx_ptr();
 	ble_phy_tx(end_time + 150);
 
-	if (should_process_pkt)
+	if (ble_ll_rx_full)
 		process_packet();
 }
 
@@ -177,7 +177,7 @@ void ble_ll_enter_connection(struct ble_connect_req *req, uint32_t end_time) {
 	tx_empty_buf.md = 0;
 	tx_empty_buf.length = 0;
 
-	ble_ll_rx_full = 0;
+	ble_ll_rx_full = false;
 	ble_ll_tx_full = 0;
 
 	connected = 0;
@@ -193,15 +193,15 @@ void ble_ll_enter_connection(struct ble_connect_req *req, uint32_t end_time) {
 }
 
 void* ble_ll_prepare_tx(void) {
+	void *ret;
 	__disable_irq();
 	if (ble_ll_tx_full == 0) {
-		ble_ll_tx_full = 1;
-		__enable_irq();
-		return ble_ll_tx_buf;
+		ret = ble_ll_tx_buf;
 	} else {
-		__enable_irq();
-		return NULL;
+		ret = NULL;
 	}
+	__enable_irq();
+	return ret;
 }
 
 void ble_ll_ready_tx(int length) {
@@ -259,19 +259,16 @@ static void process_ctrl_pkt(uint8_t opcode, void *data) {
 		tx->payload[1] = opcode;
 	}
 
-	ble_ll_rx_full = 0;
+	ble_ll_rx_full = false;
 	ble_ll_tx_full = 2;
 }
 
 static void process_packet(void) {
-	struct ble_data_pdu *pdu = rx_ptr;
+	struct ble_data_pdu *pdu = (void*)ble_ll_rx_buf;
 
 	if (pdu->llid == 3) { // control pdu
 		uint8_t opcode = pdu->payload[0];
 		void *data = pdu->payload+1;
 		process_ctrl_pkt(opcode, data);
-	} else if (pdu->llid == 0) {
-		assert(false);
-		ble_ll_rx_full = 0;
 	}
 }

@@ -13,7 +13,7 @@
 
 static uint8_t adv_ind_pdu[] = {
 	0x40, 0x0f, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11,
-	0x02, 0x01, 0x02,
+	0x02, 0x01, 0x06,
 	0x05, 0x08, 't', 'e', 's', 't',
 };
 
@@ -46,7 +46,7 @@ static void next_channel(uint32_t end_time) {
 
 static void tx_handler(uint32_t end_time) {
 	ble_phy_set_ptr(rx_buf);
-	ble_phy_rx(end_time + 146, 8);
+	ble_phy_rx(end_time + 140, 20);
 }
 
 static void rx_handler(uint32_t end_time) {
@@ -54,15 +54,15 @@ static void rx_handler(uint32_t end_time) {
 		struct ble_advertising_pdu *pkt = (void*)rx_buf;
 
 		if (pkt->pdu_type == SCAN_REQ) {
-			struct ble_scan_req *req = (void*)&pkt->payload;
+			struct ble_scan_req *req = (void*)pkt->payload;
 
 			if (ble_addr_eq(req->adv_addr, adv_addr)) {
 				ble_phy_set_ptr(scan_rsp_pdu);
-				ble_phy_tx(end_time + 150);
+				ble_phy_tx(end_time + 145);
 				return;
 			}
 		} else if (pkt->pdu_type == CONNECT_IND) {
-			struct ble_connect_req *req = (void*)&pkt->payload;
+			struct ble_connect_req *req = (void*)pkt->payload;
 
 			if (ble_addr_eq(req->adv_addr, adv_addr)) {
 				ble_ll_enter_connection(req, end_time);

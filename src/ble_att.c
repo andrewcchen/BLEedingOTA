@@ -46,41 +46,40 @@ void ble_att_process_request(void *req_p, int req_len) {
 		struct read_by_group_type_req *req = req_p;
 		struct read_by_group_type_rsp *rsp = rsp_p;
 
-		/*
 		uint16_t uuid;
 		if (req_len == 7) {
-			uuid = READ2(&req->uuid);
+			uuid = READ2(req->uuid);
 		} else if (req_len == 21) {
-			uuid = READ2(&req->uuid + 12);
+			uuid = READ2(&req->uuid[12]);
 		} else {
-			assert(false);
-			// error
+			abort();
+			// todo error
 		}
-
-		if (uuid != 0x2800) {
-			assert(false);
-			// todo error not found
-		}
-		*/
 
 		uint16_t start = READ2(&req->start);
 		uint16_t end = READ2(&req->end);
 
-		int l = ble_gatt_server_get_services(start, end, rsp->data);
-		if (l == 0) {
-			// error not found
+		if (uuid != 0x2800) {
 			RSP_ERROR(start, ATTRIBUTE_NOT_FOUND);
 		} else {
-			rsp->opcode = READ_BY_GROUP_TYPE_RSP;
-			rsp->length = 6;
-			rsp_len = sizeof(*rsp) + l;
+			int l = ble_gatt_server_get_services(start, end, rsp->data);
+			if (l == 0) {
+				// error not found
+				RSP_ERROR(start, ATTRIBUTE_NOT_FOUND);
+			} else {
+				rsp->opcode = READ_BY_GROUP_TYPE_RSP;
+				rsp->length = 6;
+				rsp_len = sizeof(*rsp) + l;
+			}
 		}
 		// todo
 
 	} else {
-		//assert(false);
+		abort();
 		RSP_ERROR(0, REQUEST_NOT_SUPPORTED);
 	}
 
 	ble_l2cap_ready_tx(rsp_len);
+
+	ble_l2cap_rx_full = false;
 }
